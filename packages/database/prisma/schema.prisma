@@ -1,0 +1,282 @@
+// This is your Prisma schema file.
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────────────────────
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum KycStatus {
+  PENDING
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+enum WalletStatus {
+  ACTIVE
+  SUSPENDED
+  CLOSED
+}
+
+enum TransactionType {
+  DEPOSIT      // top-up via Stripe
+  WITHDRAWAL   // cash-out (future)
+  TRANSFER     // user-to-user
+  REVERSAL     // admin reversal
+  FEE          // platform fee
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REVERSED
+}
+
+enum CardStatus {
+  ACTIVE
+  FROZEN
+  CANCELLED
+}
+
+enum NotificationType {
+  TRANSACTION
+  SECURITY
+  PROMOTION
+  SYSTEM
+}
+
+// ─────────────────────────────────────────────────────────────
+// USER
+// ─────────────────────────────────────────────────────────────
+
+model User {
+  id            String        @id @default(cuid())
+  email         String        @unique
+  passwordHash  String?       // null for OAuth-only users
+  firstName     String
+  lastName      String
+  phone         String?       @unique
+  avatarUrl     String?
+  role          UserRole      @default(USER)
+  kycStatus     KycStatus     @default(PENDING)
+  isActive      Boolean       @default(true)
+  emailVerified Boolean       @default(false)
+  twoFaEnabled  Boolean       @default(false)
+  twoFaSecret   String?
+
+  // OAuth
+  googleId      String?       @unique
+
+  // Relations
+  wallet        Wallet?
+  notifications Notification[]
+  sessions      Session[]
+  kycDocument   KycDocument?
+  auditLogs     AuditLog[]
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────────────────────
+// SESSION (refresh token store)
+// ─────────────────────────────────────────────────────────────
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshToken String   @unique
+  ipAddress    String?
+  userAgent    String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+// ─────────────────────────────────────────────────────────────
+// KYC DOCUMENT
+// ─────────────────────────────────────────────────────────────
+
+model KycDocument {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  docType      String    // PASSPORT, DRIVING_LICENSE, NATIONAL_ID
+  docNumber    String
+  frontImageUrl String
+  backImageUrl  String?
+  selfieUrl     String?
+  reviewedAt   DateTime?
+  reviewNotes  String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("kyc_documents")
+}
+
+// ─────────────────────────────────────────────────────────────
+// WALLET
+// ─────────────────────────────────────────────────────────────
+
+model Wallet {
+  id           String       @id @default(cuid())
+  userId       String       @unique
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance      Decimal      @default(0) @db.Decimal(18, 2)  // stored in minor units friendly decimal
+  currency     String       @default("USD")
+  status       WalletStatus @default(ACTIVE)
+  accountNumber String      @unique  // auto-generated 10-digit number
+
+  // Relations
+  sentTransactions     Transaction[] @relation("SenderWallet")
+  receivedTransactions Transaction[] @relation("ReceiverWallet")
+  virtualCards         VirtualCard[]
+  paymentOrders        PaymentOrder[]
+
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@map("wallets")
+}
+
+// ─────────────────────────────────────────────────────────────
+// TRANSACTION
+// ─────────────────────────────────────────────────────────────
+
+model Transaction {
+  id              String            @id @default(cuid())
+  reference       String            @unique @default(cuid()) // public-facing ref
+  type            TransactionType
+  status          TransactionStatus @default(PENDING)
+  amount          Decimal           @db.Decimal(18, 2)
+  fee             Decimal           @default(0) @db.Decimal(18, 2)
+  currency        String            @default("USD")
+  description     String?
+  metadata        Json?             // stripe payment intent id, etc.
+
+  // Sender (null for deposits)
+  senderWalletId  String?
+  senderWallet    Wallet?           @relation("SenderWallet", fields: [senderWalletId], references: [id])
+
+  // Receiver (null for withdrawals)
+  receiverWalletId String?
+  receiverWallet   Wallet?          @relation("ReceiverWallet", fields: [receiverWalletId], references: [id])
+
+  // Reversal tracking
+  reversedById    String?
+  reversedBy      Transaction?      @relation("Reversal", fields: [reversedById], references: [id])
+  reversal        Transaction[]     @relation("Reversal")
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([senderWalletId])
+  @@index([receiverWalletId])
+  @@index([reference])
+  @@map("transactions")
+}
+
+// ─────────────────────────────────────────────────────────────
+// VIRTUAL CARD
+// ─────────────────────────────────────────────────────────────
+
+model VirtualCard {
+  id           String     @id @default(cuid())
+  walletId     String
+  wallet       Wallet     @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  cardNumber   String     @unique  // stored encrypted in production
+  cvv          String              // stored encrypted in production
+  expiryMonth  Int
+  expiryYear   Int
+  nameOnCard   String
+  status       CardStatus @default(ACTIVE)
+  spendingLimit Decimal?  @db.Decimal(18, 2)
+
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([walletId])
+  @@map("virtual_cards")
+}
+
+// ─────────────────────────────────────────────────────────────
+// PAYMENT ORDER (Stripe top-up)
+// ─────────────────────────────────────────────────────────────
+
+model PaymentOrder {
+  id                    String   @id @default(cuid())
+  walletId              String
+  wallet                Wallet   @relation(fields: [walletId], references: [id])
+  stripePaymentIntentId String   @unique
+  amount                Decimal  @db.Decimal(18, 2)
+  currency              String   @default("USD")
+  status                String   // created | succeeded | failed | cancelled
+  metadata              Json?
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([walletId])
+  @@map("payment_orders")
+}
+
+// ─────────────────────────────────────────────────────────────
+// NOTIFICATION
+// ─────────────────────────────────────────────────────────────
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType @default(SYSTEM)
+  title     String
+  message   String
+  isRead    Boolean          @default(false)
+  metadata  Json?
+
+  createdAt DateTime         @default(now())
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+// ─────────────────────────────────────────────────────────────
+// AUDIT LOG
+// ─────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action     String   // e.g. "USER_LOGIN", "TRANSFER_CREATED"
+  resource   String?  // e.g. "Transaction", "Wallet"
+  resourceId String?
+  ipAddress  String?
+  userAgent  String?
+  metadata   Json?
+
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@map("audit_logs")
+}
