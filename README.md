@@ -1,4 +1,4 @@
-# FinVault — Digital Banking & Wallet Platform
+﻿# EasyPay — Digital Banking & Wallet Platform
 
 A full-stack fintech project built for learning, covering frontend, backend, database design, auth, payments, Redis, Docker and testing.
 

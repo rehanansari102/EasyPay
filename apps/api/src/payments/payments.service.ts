@@ -1,4 +1,4 @@
-import {
+﻿import {
   BadRequestException,
   Injectable,
   Logger,
@@ -9,7 +9,7 @@ import { PrismaService } from '../database/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CreateTopupDto } from './dto/create-topup.dto';
 import Stripe from 'stripe';
-import { toCents, MIN_TOPUP_AMOUNT, MAX_TOPUP_AMOUNT } from '@finvault/shared';
+import { toCents, MIN_TOPUP_AMOUNT, MAX_TOPUP_AMOUNT } from '@easypay/shared';
 import { Prisma } from '@prisma/client';
 
 @Injectable()

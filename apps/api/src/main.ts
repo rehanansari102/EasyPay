@@ -1,4 +1,4 @@
-import { NestFactory } from '@nestjs/core';
+﻿import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
@@ -54,7 +54,7 @@ async function bootstrap() {
   // ── Swagger (OpenAPI docs) ────────────────────────────────────
   if (env !== 'production') {
     const swaggerConfig = new DocumentBuilder()
-      .setTitle('FinVault API')
+      .setTitle('EasyPay API')
       .setDescription('Digital Banking/Wallet REST API')
       .setVersion('1.0')
       .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'JWT')
@@ -68,7 +68,7 @@ async function bootstrap() {
   }
 
   await app.listen(port);
-  console.log(`\n🚀 FinVault API running on: http://localhost:${port}`);
+  console.log(`\n🚀 EasyPay API running on: http://localhost:${port}`);
   if (env !== 'production') {
     console.log(`📚 Swagger docs:           http://localhost:${port}/api/docs`);
   }

@@ -8,7 +8,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { authApi } from '@/lib/api';
-import { useAuthStore } from '@/store/auth.store';
 
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
@@ -26,7 +25,6 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { setAuth } = useAuthStore();
 
   const {
     register,
@@ -36,10 +34,8 @@ export default function RegisterPage() {
 
   const { mutate: signup, isPending } = useMutation({
     mutationFn: authApi.register,
-    onSuccess: (data) => {
-      setAuth(data.user);
-      toast.success('Account created! Welcome to FinVault 🎉');
-      router.push('/dashboard');
+    onSuccess: (_, variables) => {
+      router.push(`/auth/check-email?email=${encodeURIComponent(variables.email)}`);
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Registration failed');

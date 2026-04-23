@@ -1,5 +1,5 @@
 {
-  "name": "finvault",
+  "name": "easypay",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -14,7 +14,7 @@
     "db:generate": "turbo run db:generate",
     "db:migrate": "turbo run db:migrate",
     "db:seed": "turbo run db:seed",
-    "db:studio": "pnpm --filter @finvault/database db:studio"
+    "db:studio": "pnpm --filter @easypay/database db:studio"
   },
   "devDependencies": {
     "turbo": "^2.0.0",

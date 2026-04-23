@@ -30,12 +30,16 @@ export default function LoginPage() {
   const { mutate: login, isPending } = useMutation({
     mutationFn: authApi.login,
     onSuccess: (data) => {
+      if ('requires2fa' in data) {
+        router.push(`/auth/two-factor?session=${data.tempSessionId}`);
+        return;
+      }
       setAuth(data.user);
       toast.success(`Welcome back, ${data.user.firstName}!`);
       router.push('/dashboard');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Login failed');
+      toast.error(error.response?.data?.message || 'Invalid email or password', { duration: 5000 });
     },
   });
 
@@ -56,7 +60,12 @@ export default function LoginPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Password</label>
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-sm font-medium">Password</label>
+            <Link href="/auth/forgot-password" className="text-xs text-primary hover:underline">
+              Forgot password?
+            </Link>
+          </div>
           <input
             {...register('password')}
             type="password"
@@ -75,6 +84,7 @@ export default function LoginPage() {
         >
           {isPending ? 'Signing in...' : 'Sign In'}
         </button>
+
       </form>
 
       <div className="mt-4 text-center text-sm">

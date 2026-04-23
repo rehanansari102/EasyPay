@@ -1,9 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
+﻿import { Inject, Injectable } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { PrismaService } from '../database/prisma.service';
 import { NotificationType } from '@prisma/client';
-import { REDIS_KEYS } from '@finvault/shared';
+import { REDIS_KEYS } from '@easypay/shared';
 
 interface SendNotificationDto {
   title: string;

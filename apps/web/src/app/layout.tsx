@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+﻿import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { Providers } from '@/components/providers';
 import { Toaster } from 'sonner';
@@ -7,7 +7,7 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: { default: 'FinVault', template: '%s | FinVault' },
+  title: { default: 'EasyPay', template: '%s | EasyPay' },
   description: 'Digital banking and wallet platform',
   keywords: ['fintech', 'wallet', 'banking', 'payments'],
 };

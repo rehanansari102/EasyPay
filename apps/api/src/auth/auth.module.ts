@@ -9,6 +9,7 @@ import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { UsersModule } from '../users/users.module';
+import { MailerModule } from '../mailer/mailer.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { UsersModule } from '../users/users.module';
       }),
     }),
     UsersModule,
+    MailerModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, JwtRefreshStrategy, LocalStrategy, GoogleStrategy],

@@ -1,6 +1,6 @@
-import { create } from 'zustand';
+﻿import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { UserDto } from '@finvault/shared';
+import { UserDto } from '@easypay/shared';
 
 interface AuthState {
   user: UserDto | null;

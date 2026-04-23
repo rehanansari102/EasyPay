@@ -1,4 +1,4 @@
-# FinVault — Project Roadmap
+﻿# EasyPay — Project Roadmap
 
 Track every phase from scaffold to production-ready product.
 
@@ -70,10 +70,10 @@ Track every phase from scaffold to production-ready product.
 - [x] `@CurrentUser()` param decorator
 - [x] Audit log on login
 - [x] Password hashing with bcrypt (cost 12)
-- [ ] Email verification flow (send token → verify link)
-- [ ] Forgot password / reset password flow
-- [ ] Two-Factor Authentication (TOTP via `otplib`)
-- [ ] Login attempt tracking + account lockout
+- [x] Email verification flow (send token → verify link)
+- [x] Forgot password / reset password flow
+- [x] Two-Factor Authentication (TOTP via `otplib`)
+- [x] Login attempt tracking + account lockout
 
 ---
 
@@ -141,7 +141,7 @@ Track every phase from scaffold to production-ready product.
 - [x] Axios API client with JWT interceptor + silent token refresh
 - [x] `Providers` component wrapping QueryClient + ThemeProvider
 - [x] `Sonner` toast notifications
-- [x] Monorepo `@finvault/shared` types consumed in frontend
+- [x] Monorepo `@easypay/shared` types consumed in frontend
 
 ---
 
@@ -152,10 +152,10 @@ Track every phase from scaffold to production-ready product.
 - [x] `/auth/callback` — Google OAuth token exchange page
 - [x] Route guard in dashboard layout (redirect if unauthenticated)
 - [x] Google OAuth login button
-- [ ] `/auth/verify-email` — email verification page
-- [ ] `/auth/forgot-password` — request reset
-- [ ] `/auth/reset-password` — set new password
-- [ ] 2FA entry screen (TOTP code)
+- [x] `/auth/verify-email` — email verification page
+- [x] `/auth/forgot-password` — request reset
+- [x] `/auth/reset-password` — set new password
+- [x] 2FA entry screen (TOTP code)
 
 ---
 

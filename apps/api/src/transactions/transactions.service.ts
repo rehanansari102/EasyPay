@@ -1,4 +1,4 @@
-import {
+﻿import {
   BadRequestException,
   ForbiddenException,
   Injectable,
@@ -9,8 +9,8 @@ import { WalletService } from '../wallet/wallet.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { TransferDto } from './dto/transfer.dto';
 import { TransactionFiltersDto } from './dto/transaction-filters.dto';
-import { TransactionDto, PaginatedTransactions } from '@finvault/shared';
-import { calculateFee, MAX_TRANSFER_AMOUNT, MIN_TRANSFER_AMOUNT } from '@finvault/shared';
+import { TransactionDto, PaginatedTransactions } from '@easypay/shared';
+import { calculateFee, MAX_TRANSFER_AMOUNT, MIN_TRANSFER_AMOUNT } from '@easypay/shared';
 import { Prisma } from '@prisma/client';
 
 @Injectable()

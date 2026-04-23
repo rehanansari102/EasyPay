@@ -1,4 +1,4 @@
-{
+﻿{
   "compilerOptions": {
     "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
@@ -16,7 +16,7 @@
     "plugins": [{ "name": "next" }],
     "paths": {
       "@/*": ["./src/*"],
-      "@finvault/shared": ["../../packages/shared/src"]
+      "@easypay/shared": ["../../packages/shared/src"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

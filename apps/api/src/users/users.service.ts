@@ -1,7 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+﻿import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import { UserDto } from '@finvault/shared';
+import { UserDto } from '@easypay/shared';
 
 @Injectable()
 export class UsersService {

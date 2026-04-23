@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { transactionsApi } from '@/lib/api';
@@ -6,8 +6,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { TransactionDto } from '@finvault/shared';
-import { formatCurrency } from '@finvault/shared';
+import { TransactionDto } from '@easypay/shared';
+import { formatCurrency } from '@easypay/shared';
 import { format } from 'date-fns';
 import { useState } from 'react';
 

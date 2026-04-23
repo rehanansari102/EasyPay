@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+﻿import { Controller, Get } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from '../auth/decorators/public.decorator';
 
@@ -12,7 +12,7 @@ export class HealthController {
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),
-      service: 'FinVault API',
+      service: 'EasyPay API',
     };
   }
 }

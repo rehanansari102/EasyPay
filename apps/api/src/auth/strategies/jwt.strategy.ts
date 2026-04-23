@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
+﻿import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
-import { JwtPayload } from '@finvault/shared';
+import { JwtPayload } from '@easypay/shared';
 import { PrismaService } from '../../database/prisma.service';
 import { UnauthorizedException } from '@nestjs/common';
 

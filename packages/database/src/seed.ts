@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole, KycStatus, WalletStatus } from '@prisma/client';
+﻿import { PrismaClient, UserRole, KycStatus, WalletStatus } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -20,7 +20,7 @@ async function main() {
       email: 'admin@finvault.com',
       passwordHash: adminPassword,
       firstName: 'Admin',
-      lastName: 'FinVault',
+      lastName: 'EasyPay',
       role: UserRole.ADMIN,
       kycStatus: KycStatus.APPROVED,
       emailVerified: true,

@@ -1,6 +1,6 @@
-import { IsString, IsNumber, IsOptional, Min, Max, MaxLength } from 'class-validator';
+﻿import { IsString, IsNumber, IsOptional, Min, Max, MaxLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { MAX_TRANSFER_AMOUNT, MIN_TRANSFER_AMOUNT } from '@finvault/shared';
+import { MAX_TRANSFER_AMOUNT, MIN_TRANSFER_AMOUNT } from '@easypay/shared';
 
 export class TransferDto {
   @ApiProperty({ example: '1234567890', description: '10-digit account number' })

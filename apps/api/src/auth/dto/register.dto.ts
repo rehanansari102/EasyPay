@@ -1,6 +1,6 @@
-import { IsEmail, IsString, MinLength, MaxLength, Matches } from 'class-validator';
+﻿import { IsEmail, IsString, MinLength, MaxLength, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { PASSWORD_REGEX } from '@finvault/shared';
+import { PASSWORD_REGEX } from '@easypay/shared';
 
 export class RegisterDto {
   @ApiProperty({ example: 'alice@example.com' })

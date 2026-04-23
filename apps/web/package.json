@@ -1,5 +1,5 @@
 {
-  "name": "@finvault/web",
+  "name": "@easypay/web",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -11,7 +11,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@finvault/shared": "workspace:*",
+    "@easypay/shared": "workspace:*",
     "next": "^15.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

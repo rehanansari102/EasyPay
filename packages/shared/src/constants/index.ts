@@ -1,4 +1,4 @@
-export const APP_NAME = 'FinVault';
+﻿export const APP_NAME = 'EasyPay';
 export const APP_VERSION = '1.0.0';
 
 export const SUPPORTED_CURRENCIES = ['USD', 'EUR', 'GBP'] as const;
@@ -26,11 +26,22 @@ export const REDIS_KEYS = {
   EMAIL_VERIFY: (token: string) => `email_verify:${token}`,
   PASSWORD_RESET: (token: string) => `pwd_reset:${token}`,
   NOTIFICATION_CHANNEL: (userId: string) => `notifications:${userId}`,
+  LOGIN_ATTEMPTS: (email: string) => `login_attempts:${email}`,
+  LOGIN_LOCKOUT: (email: string) => `login_lockout:${email}`,
+  TWO_FA_PENDING: (sessionId: string) => `2fa_pending:${sessionId}`,
+  TWO_FA_SETUP: (userId: string) => `2fa_setup:${userId}`,
 } as const;
 
 export const CACHE_TTL = {
-  SHORT: 60,         // 1 minute
-  MEDIUM: 300,       // 5 minutes
-  LONG: 3600,        // 1 hour
+  SHORT: 60,              // 1 minute
+  MEDIUM: 300,            // 5 minutes
+  LONG: 3600,             // 1 hour
   REFRESH_TOKEN: 60 * 60 * 24 * 7, // 7 days
+  EMAIL_VERIFY: 60 * 60 * 24,      // 24 hours
+  PASSWORD_RESET: 60 * 15,         // 15 minutes
+  TWO_FA_PENDING: 60 * 5,          // 5 minutes
+  TWO_FA_SETUP: 60 * 10,           // 10 minutes
+  LOGIN_LOCKOUT: 60 * 15,          // 15 minutes
 } as const;
+
+export const MAX_LOGIN_ATTEMPTS = 5;  // lock after this many failed attempts

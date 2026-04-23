@@ -1,10 +1,10 @@
-import {
+﻿import {
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import { WalletDto, VirtualCardDto } from '@finvault/shared';
+import { WalletDto, VirtualCardDto } from '@easypay/shared';
 import { CreateVirtualCardDto } from './dto/create-virtual-card.dto';
 
 @Injectable()

@@ -1,7 +1,7 @@
-import { IsOptional, IsEnum, IsDateString, IsNumber, Min, Max } from 'class-validator';
+﻿import { IsOptional, IsEnum, IsDateString, IsNumber, Min, Max } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { TransactionType, TransactionStatus } from '@finvault/shared';
+import { TransactionType, TransactionStatus } from '@easypay/shared';
 
 export class TransactionFiltersDto {
   @ApiPropertyOptional({ enum: ['DEPOSIT','WITHDRAWAL','TRANSFER','FEE','REVERSAL'] })

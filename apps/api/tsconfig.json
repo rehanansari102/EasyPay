@@ -1,4 +1,4 @@
-{
+﻿{
   "compilerOptions": {
     "module": "commonjs",
     "declaration": true,
@@ -18,8 +18,8 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@finvault/shared": ["../../packages/shared/src"],
-      "@finvault/database": ["../../packages/database/src"]
+      "@easypay/shared": ["../../packages/shared/src"],
+      "@easypay/database": ["../../packages/database/src"]
     }
   }
 }
