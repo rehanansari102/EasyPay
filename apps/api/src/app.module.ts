@@ -11,6 +11,8 @@ import { PaymentsModule } from './payments/payments.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { DatabaseModule } from './database/database.module';
 import { HealthModule } from './health/health.module';
+import { AdminModule } from './admin/admin.module';
+import { KycModule } from './kyc/kyc.module';
 import appConfig from './config/app.config';
 import { validate } from './config/env.validation';
 
@@ -49,6 +51,8 @@ import { validate } from './config/env.validation';
     PaymentsModule,
     NotificationsModule,
     HealthModule,
+    AdminModule,
+    KycModule,
   ],
 })
 export class AppModule {}

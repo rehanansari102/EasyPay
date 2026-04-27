@@ -36,14 +36,12 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         {/* Main content */}
-        <div className="relative flex-1 flex flex-col justify-center gap-7 max-w-lg py-6">
+        <div className="relative flex-1 flex flex-col justify-center gap-7 pb-0 max-w-lg py-6">
           {/* Headline */}
           <div className="animate-slide-up">
-            <p className="text-indigo-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-3">
-              Digital Banking Platform
-            </p>
+          
             <h2 className="text-4xl font-bold text-white leading-[1.1] tracking-tight">
-              Banking built<br />for the{' '}
+              Banking built for the{' '}
               <span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
                 future
               </span>

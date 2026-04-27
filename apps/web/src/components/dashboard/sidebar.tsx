@@ -11,6 +11,9 @@ import {
   LogOut,
   Settings,
   ShieldCheck,
+  Users,
+  BarChart3,
+  ScrollText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth.store';
@@ -23,6 +26,14 @@ const navItems = [
   { href: '/dashboard/transactions', label: 'Transactions', icon: ArrowLeftRight },
   { href: '/dashboard/cards', label: 'Virtual Cards', icon: CreditCard },
   { href: '/dashboard/notifications', label: 'Notifications', icon: Bell },
+  { href: '/dashboard/kyc', label: 'Identity (KYC)', icon: ShieldCheck },
+];
+
+const adminNavItems = [
+  { href: '/dashboard/admin', label: 'Overview', icon: BarChart3 },
+  { href: '/dashboard/admin/users', label: 'Users', icon: Users },
+  { href: '/dashboard/admin/transactions', label: 'Transactions', icon: ArrowLeftRight },
+  { href: '/dashboard/admin/audit-logs', label: 'Audit Logs', icon: ScrollText },
 ];
 
 export function Sidebar() {
@@ -66,7 +77,7 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 space-y-0.5">
-        {navItems.map(({ href, label, icon: Icon }) => {
+        {navItems.filter(({ href }) => !(href === '/dashboard/kyc' && user?.role === 'ADMIN')).map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href;
           return (
             <Link
@@ -101,6 +112,50 @@ export function Sidebar() {
             </Link>
           );
         })}
+
+        {/* Admin section */}
+        {user?.role === 'ADMIN' && (
+          <div className="pt-3">
+            <p className="text-slate-600 text-[10px] font-semibold uppercase tracking-widest px-3 pb-1.5">
+              Admin
+            </p>
+            {adminNavItems.map(({ href, label, icon: Icon }) => {
+              const isActive = pathname === href || (href !== '/dashboard/admin' && pathname.startsWith(href));
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={cn(
+                    'group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200',
+                    isActive
+                      ? 'bg-rose-500/10 text-white border border-rose-500/20'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]',
+                  )}
+                >
+                  <div
+                    className={cn(
+                      'w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 flex-shrink-0',
+                      isActive
+                        ? 'bg-gradient-to-br from-rose-500 to-orange-500 shadow-md shadow-rose-500/30'
+                        : 'bg-white/[0.04] group-hover:bg-white/[0.08]',
+                    )}
+                  >
+                    <Icon
+                      className={cn(
+                        'w-4 h-4',
+                        isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200',
+                      )}
+                    />
+                  </div>
+                  <span className="flex-1">{label}</span>
+                  {isActive && (
+                    <div className="w-1.5 h-1.5 rounded-full bg-rose-400 flex-shrink-0" />
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </nav>
 
       {/* Bottom section */}

@@ -80,3 +80,50 @@ export const notificationsApi = {
   markRead: (id: string) => apiClient.patch(`/notifications/${id}/read`).then((r) => r.data),
   markAllRead: () => apiClient.patch('/notifications/read-all').then((r) => r.data),
 };
+
+export const kycApi = {
+  getStatus: () => apiClient.get('/kyc/status').then((r) => r.data),
+  submit: (data: { docType: string; docNumber: string; frontImageUrl: string; backImageUrl?: string; selfieUrl?: string }) =>
+    apiClient.post('/kyc/submit', data).then((r) => r.data),
+};
+
+export const usersApi = {
+  getProfile: () => apiClient.get('/users/me').then((r) => r.data),
+  updateProfile: (data: { firstName?: string; lastName?: string; phone?: string }) =>
+    apiClient.patch('/users/me', data).then((r) => r.data),
+  uploadAvatar: (file: File) => {
+    console.log('Uploading avatar file:', file);
+    const form = new FormData();
+    form.append('avatar', file);
+    return apiClient.post('/users/me/avatar', form).then((r) => r.data);
+  },
+};
+
+export const adminApi = {
+  getStats: () => apiClient.get('/admin/stats').then((r) => r.data),
+
+  // Users
+  getUsers: (params?: { page?: number; limit?: number; search?: string }) =>
+    apiClient.get('/admin/users', { params }).then((r) => r.data),
+  getUserById: (id: string) => apiClient.get(`/admin/users/${id}`).then((r) => r.data),
+  suspendUser: (id: string) => apiClient.patch(`/admin/users/${id}/suspend`).then((r) => r.data),
+  activateUser: (id: string) => apiClient.patch(`/admin/users/${id}/activate`).then((r) => r.data),
+  updateKyc: (id: string, status: 'APPROVED' | 'REJECTED', notes?: string) =>
+    apiClient.patch(`/admin/users/${id}/kyc`, { status, notes }).then((r) => r.data),
+
+  // Wallets
+  getWallets: (params?: { page?: number; limit?: number }) =>
+    apiClient.get('/admin/wallets', { params }).then((r) => r.data),
+  suspendWallet: (id: string) => apiClient.patch(`/admin/wallets/${id}/suspend`).then((r) => r.data),
+  activateWallet: (id: string) => apiClient.patch(`/admin/wallets/${id}/activate`).then((r) => r.data),
+
+  // Transactions
+  getTransactions: (params?: { page?: number; limit?: number; status?: string; type?: string }) =>
+    apiClient.get('/admin/transactions', { params }).then((r) => r.data),
+  reverseTransaction: (id: string) =>
+    apiClient.post(`/admin/transactions/${id}/reverse`).then((r) => r.data),
+
+  // Audit logs
+  getAuditLogs: (params?: { page?: number; limit?: number; userId?: string }) =>
+    apiClient.get('/admin/audit-logs', { params }).then((r) => r.data),
+};

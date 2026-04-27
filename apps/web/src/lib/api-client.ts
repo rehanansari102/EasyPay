@@ -5,8 +5,15 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export const apiClient = axios.create({
   baseURL: `${API_BASE_URL}/api/v1`,
-  headers: { 'Content-Type': 'application/json' },
   withCredentials: true, // send httpOnly cookies on every request
+});
+
+// ── Request interceptor: set Content-Type only for non-FormData ──
+apiClient.interceptors.request.use((config) => {
+  if (!(config.data instanceof FormData)) {
+    config.headers['Content-Type'] = 'application/json';
+  }
+  return config;
 });
 
 // ── Response interceptor: handle 401, silent refresh via cookie ──

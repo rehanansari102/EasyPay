@@ -47,6 +47,19 @@ class EnvironmentVariables {
   @IsString()
   @IsOptional()
   SMTP_FROM?: string;
+
+  // Cloudflare R2 object storage (for KYC document uploads)
+  @IsString()
+  R2_ACCOUNT_ID: string;
+
+  @IsString()
+  R2_ACCESS_KEY_ID: string;
+
+  @IsString()
+  R2_SECRET_ACCESS_KEY: string;
+
+  @IsString()
+  R2_BUCKET_NAME: string;
 }
 
 export function validate(config: Record<string, unknown>) {
