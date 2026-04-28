@@ -27,7 +27,7 @@ export function Header() {
   const { data: countData } = useQuery({
     queryKey: ['notifications', 'count'],
     queryFn: notificationsApi.unreadCount,
-    refetchInterval: 30_000,
+    refetchInterval: (query) => query.state.error ? false : 30_000, // stop polling if server is down
   });
 
   const initials = user

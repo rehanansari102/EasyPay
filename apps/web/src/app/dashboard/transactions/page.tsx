@@ -41,7 +41,7 @@ export default function TransactionsPage() {
       setShowSendModal(false);
       reset();
     },
-    onError: (err: any) => toast.error(err.response?.data?.message || 'Transfer failed'),
+    onError: (err: any) => toast.error(err.response?.data?.message || err.message || 'Transfer failed'),
   });
 
   return (

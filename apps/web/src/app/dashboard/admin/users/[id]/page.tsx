@@ -23,19 +23,19 @@ export default function AdminUserDetailPage() {
   const suspendMutation = useMutation({
     mutationFn: () => adminApi.suspendUser(params.id),
     onSuccess: () => { toast.success('User suspended'); queryClient.invalidateQueries({ queryKey: ['admin', 'user', params.id] }); },
-    onError: (e: any) => toast.error(e.response?.data?.message || 'Failed'),
+    onError: (e: any) => toast.error(e.response?.data?.message || e.message || 'Failed'),
   });
 
   const activateMutation = useMutation({
     mutationFn: () => adminApi.activateUser(params.id),
     onSuccess: () => { toast.success('User activated'); queryClient.invalidateQueries({ queryKey: ['admin', 'user', params.id] }); },
-    onError: (e: any) => toast.error(e.response?.data?.message || 'Failed'),
+    onError: (e: any) => toast.error(e.response?.data?.message || e.message || 'Failed'),
   });
 
   const kycMutation = useMutation({
     mutationFn: (status: 'APPROVED' | 'REJECTED') => adminApi.updateKyc(params.id, status),
     onSuccess: (_, status) => { toast.success(`KYC ${status}`); queryClient.invalidateQueries({ queryKey: ['admin', 'user', params.id] }); },
-    onError: (e: any) => toast.error(e.response?.data?.message || 'Failed'),
+    onError: (e: any) => toast.error(e.response?.data?.message || e.message || 'Failed'),
   });
 
   if (currentUser?.role !== 'ADMIN') { router.push('/dashboard'); return null; }

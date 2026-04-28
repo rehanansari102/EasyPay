@@ -176,7 +176,7 @@ export default function KycPage() {
       toast.success(data.message);
       queryClient.invalidateQueries({ queryKey: ['kyc', 'status'] });
     },
-    onError: (e: any) => toast.error(e.response?.data?.message || 'Submission failed'),
+    onError: (e: any) => toast.error(e.response?.data?.message || e.message || 'Submission failed'),
   });
 
   const selectedDocType = DOC_TYPES.find((d) => d.value === docType)!;

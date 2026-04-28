@@ -181,21 +181,22 @@ Track every phase from scaffold to production-ready product.
 
 ---
 
-## Phase 14 — Frontend Wallet & Cards Page ⬜
+## Phase 14 — Frontend Wallet & Cards Page ✅
 
-- [ ] `/dashboard/wallet` — wallet details + top-up button
-- [ ] Stripe Elements integration (`CardElement` or `PaymentElement`)
-- [ ] Top-up flow: create PaymentIntent → Stripe UI → confirm
-- [ ] `/dashboard/cards` — list virtual cards with masked numbers
-- [ ] Create card modal
-- [ ] Freeze / cancel card actions
+- [x] `/dashboard/wallet` — wallet details + top-up button
+- [x] Stripe Elements integration (`PaymentElement`)
+- [x] Top-up flow: create PaymentIntent → Stripe UI → confirm
+- [x] `/dashboard/cards` — list virtual cards with masked numbers
+- [x] Create card modal
+- [x] Freeze / unfreeze card actions
 
 ---
 
-## Phase 15 — Frontend Notifications Page ⬜
+## Phase 15 — Frontend Notifications Page 🔄
 
-- [ ] `/dashboard/notifications` — full notifications list
-- [ ] Mark individual / all as read
+- [x] `/dashboard/notifications` — full notifications list
+- [x] Mark individual / all as read
+- [x] Unread count badge in header
 - [ ] Real-time updates via SSE (connects to backend event stream)
 - [ ] Notification grouping by type (transaction, security, system)
 

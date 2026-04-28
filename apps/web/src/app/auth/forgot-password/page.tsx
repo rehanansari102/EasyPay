@@ -21,7 +21,7 @@ export default function ForgotPasswordPage() {
       toast.success('Reset link sent! Check your email.');
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Something went wrong');
+      toast.error(err.response?.data?.message || err.message || 'Something went wrong');
     },
   });
 

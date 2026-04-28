@@ -6,6 +6,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 export const apiClient = axios.create({
   baseURL: `${API_BASE_URL}/api/v1`,
   withCredentials: true, // send httpOnly cookies on every request
+  timeout: 10000,        // 10 s — fail fast on server down / no internet
 });
 
 // ── Request interceptor: set Content-Type only for non-FormData ──
@@ -28,6 +29,20 @@ const processQueue = (error: unknown) => {
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
+    // ── Network / timeout errors — handle first, before anything that reads error.config ──
+    if (error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK' || !error.response) {
+      return Promise.reject(
+        Object.assign(
+          new Error(
+            error.code === 'ECONNABORTED'
+              ? 'Request timed out. Please check your connection and try again.'
+              : 'Unable to reach the server. Please check your internet connection.',
+          ),
+          { code: error.code },
+        ),
+      );
+    }
+
     const originalRequest = error.config;
 
     const isAuthRoute = originalRequest.url?.includes('/auth/');

@@ -38,7 +38,7 @@ export default function RegisterPage() {
       router.push(`/auth/check-email?email=${encodeURIComponent(variables.email)}`);
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Registration failed');
+      toast.error(error.response?.data?.message || error.message || 'Registration failed');
     },
   });
 

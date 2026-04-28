@@ -29,7 +29,7 @@ export default function AdminUsersPage() {
       toast.success('User suspended');
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
     },
-    onError: (e: any) => toast.error(e.response?.data?.message || 'Failed'),
+    onError: (e: any) => toast.error(e.response?.data?.message || e.message || 'Failed'),
   });
 
   const activateMutation = useMutation({
@@ -38,7 +38,7 @@ export default function AdminUsersPage() {
       toast.success('User activated');
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
     },
-    onError: (e: any) => toast.error(e.response?.data?.message || 'Failed'),
+    onError: (e: any) => toast.error(e.response?.data?.message || e.message || 'Failed'),
   });
 
   if (user?.role !== 'ADMIN') { router.push('/dashboard'); return null; }

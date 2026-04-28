@@ -26,7 +26,7 @@ export default function TwoFactorPage() {
       router.replace('/dashboard');
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Invalid code. Please try again.');
+      toast.error(err.response?.data?.message || err.message || 'Invalid code. Please try again.');
       // Clear inputs on error
       setDigits(Array(6).fill(''));
       inputRefs.current[0]?.focus();

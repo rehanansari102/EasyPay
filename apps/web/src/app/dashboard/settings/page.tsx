@@ -120,7 +120,7 @@ function ProfileTab() {
       queryClient.invalidateQueries({ queryKey: ['users', 'me'] });
     },
     onError: (e: any) =>
-      toast.error(e.response?.data?.message ?? 'Failed to update profile'),
+      toast.error(e.response?.data?.message ?? e.message ?? 'Failed to update profile'),
   });
 
   const avatarMutation = useMutation({
@@ -131,7 +131,7 @@ function ProfileTab() {
       queryClient.invalidateQueries({ queryKey: ['users', 'me'] });
     },
     onError: (e: any) =>
-      toast.error(e.response?.data?.message ?? 'Failed to upload avatar'),
+      toast.error(e.response?.data?.message ?? e.message ?? 'Failed to upload avatar'),
   });
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {

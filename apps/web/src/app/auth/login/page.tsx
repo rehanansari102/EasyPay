@@ -39,7 +39,7 @@ export default function LoginPage() {
       router.push('/dashboard');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Invalid email or password', { duration: 5000 });
+      toast.error(error.response?.data?.message || error.message || 'Invalid email or password', { duration: 5000 });
     },
   });
 
