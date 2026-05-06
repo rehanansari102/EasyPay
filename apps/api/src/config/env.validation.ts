@@ -60,6 +60,11 @@ class EnvironmentVariables {
 
   @IsString()
   R2_BUCKET_NAME: string;
+
+  // AES-256-GCM key for card number + CVV encryption (64-char hex = 32 bytes)
+  // Generate: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+  @IsString()
+  CARD_ENCRYPTION_KEY: string;
 }
 
 export function validate(config: Record<string, unknown>) {

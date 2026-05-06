@@ -1,5 +1,6 @@
-import { Controller, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, OnModuleDestroy, Param, Patch, Query, Req, Sse, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Observable, fromEvent, merge } from 'rxjs';
 import { NotificationsService } from './notifications.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -10,6 +11,15 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 @Controller({ path: 'notifications', version: '1' })
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
+
+  @Sse('stream')
+  @ApiOperation({ summary: 'Server-Sent Events stream for real-time notifications' })
+  stream(@CurrentUser('id') userId: string, @Req() req: any): Observable<MessageEvent> {
+    const subject = this.notificationsService.getSubject(userId);
+    // Clean up subject when the client disconnects
+    req.on('close', () => this.notificationsService.removeSubject(userId));
+    return subject.asObservable();
+  }
 
   @Get()
   @ApiOperation({ summary: 'List notifications' })

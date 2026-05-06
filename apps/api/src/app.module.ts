@@ -13,6 +13,7 @@ import { DatabaseModule } from './database/database.module';
 import { HealthModule } from './health/health.module';
 import { AdminModule } from './admin/admin.module';
 import { KycModule } from './kyc/kyc.module';
+import { CommonModule } from './common/common.module';
 import appConfig from './config/app.config';
 import { validate } from './config/env.validation';
 
@@ -43,6 +44,7 @@ import { validate } from './config/env.validation';
     }),
 
     // ── Feature modules ────────────────────────────────────────
+    CommonModule,
     DatabaseModule,
     AuthModule,
     UsersModule,

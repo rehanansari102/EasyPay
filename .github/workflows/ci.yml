@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [develop]
+
+jobs:
+  lint-and-test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: easypay
+          POSTGRES_PASSWORD: easypay
+          POSTGRES_DB: easypay_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://easypay:easypay@localhost:5432/easypay_test
+      REDIS_URL: redis://localhost:6379
+      JWT_SECRET: ci-jwt-secret-not-for-production
+      JWT_REFRESH_SECRET: ci-refresh-secret-not-for-production
+      CARD_ENCRYPTION_KEY: 0000000000000000000000000000000000000000000000000000000000000000
+      NODE_ENV: test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @easypay/database exec prisma generate
+
+      - name: Run Prisma migrations (test DB)
+        run: pnpm --filter @easypay/database exec prisma migrate deploy
+
+      - name: Lint
+        run: pnpm turbo lint
+
+      - name: Build shared packages
+        run: pnpm turbo build --filter=@easypay/shared --filter=@easypay/database
+
+      - name: Run unit tests
+        run: pnpm turbo test --filter=api

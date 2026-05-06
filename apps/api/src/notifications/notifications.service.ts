@@ -1,6 +1,7 @@
 ﻿import { Inject, Injectable } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import { Subject } from 'rxjs';
 import { PrismaService } from '../database/prisma.service';
 import { NotificationType } from '@prisma/client';
 import { REDIS_KEYS } from '@easypay/shared';
@@ -14,10 +15,31 @@ interface SendNotificationDto {
 
 @Injectable()
 export class NotificationsService {
+  /** In-process SSE subjects keyed by userId */
+  private subjects = new Map<string, Subject<MessageEvent>>();
+
   constructor(
     private prisma: PrismaService,
     @Inject(CACHE_MANAGER) private cache: Cache,
   ) {}
+
+  // ── SSE stream management ─────────────────────────────────────
+  getSubject(userId: string): Subject<MessageEvent> {
+    // Always (re-)create on connect so a fresh Subject is returned
+    // even if the previous one was completed on disconnect.
+    const subject = new Subject<MessageEvent>();
+    this.subjects.set(userId, subject);
+    return subject;
+  }
+
+  removeSubject(userId: string): void {
+    const subject = this.subjects.get(userId);
+    if (subject) {
+      this.subjects.delete(userId);
+      // Complete AFTER removing so no new .next() can race with completion
+      subject.complete();
+    }
+  }
 
   // ── Create & publish ──────────────────────────────────────────
   async send(userId: string, dto: SendNotificationDto) {
@@ -37,6 +59,12 @@ export class NotificationsService {
       JSON.stringify(notification),
       30_000, // 30-second window for pickup
     );
+
+    // Push to any active SSE stream for this user
+    const subject = this.subjects.get(userId);
+    if (subject) {
+      subject.next({ data: notification } as unknown as MessageEvent);
+    }
 
     return notification;
   }

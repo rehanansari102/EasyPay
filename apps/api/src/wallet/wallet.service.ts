@@ -6,10 +6,14 @@
 import { PrismaService } from '../database/prisma.service';
 import { WalletDto, VirtualCardDto } from '@easypay/shared';
 import { CreateVirtualCardDto } from './dto/create-virtual-card.dto';
+import { CryptoService } from '../common/crypto.service';
 
 @Injectable()
 export class WalletService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private crypto: CryptoService,
+  ) {}
 
   async getWallet(userId: string): Promise<WalletDto> {
     const wallet = await this.prisma.wallet.findUnique({ where: { userId } });
@@ -41,15 +45,17 @@ export class WalletService {
     const expiryYear = now.getFullYear() + 3;
     const expiryMonth = now.getMonth() + 1;
 
-    // In production: encrypt cardNumber and CVV before storing
+    // Encrypt card number and CVV before storing
     const cardNumber = this.generateCardNumber();
     const cvv = this.generateCvv();
+    const encryptedCardNumber = this.crypto.encrypt(cardNumber);
+    const encryptedCvv = this.crypto.encrypt(cvv);
 
     const card = await this.prisma.virtualCard.create({
       data: {
         walletId: wallet.id,
-        cardNumber,
-        cvv,
+        cardNumber: encryptedCardNumber,
+        cvv: encryptedCvv,
         expiryMonth,
         expiryYear,
         nameOnCard: dto.nameOnCard,
@@ -105,7 +111,15 @@ export class WalletService {
   }
 
   cardToDto(card: any): VirtualCardDto {
-    const last4 = card.cardNumber.slice(-4);
+    // Decrypt to get last 4 digits for display; never expose full number in DTO
+    let last4 = '0000';
+    try {
+      const decrypted = this.crypto.decrypt(card.cardNumber);
+      last4 = decrypted.slice(-4);
+    } catch {
+      // Already plain (legacy unencrypted) or invalid — fallback to raw last4
+      last4 = card.cardNumber.slice(-4);
+    }
     return {
       id: card.id,
       walletId: card.walletId,

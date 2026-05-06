@@ -2,30 +2,74 @@
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
+import { WinstonModule } from 'nest-winston';
+import * as winston from 'winston';
 import helmet from 'helmet';
 import * as compression from 'compression';
 import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import { SanitizePipe } from './common/sanitize.pipe';
+
+function createWinstonLogger(env: string) {
+  return WinstonModule.createLogger({
+    transports: [
+      new winston.transports.Console({
+        format: env === 'production'
+          ? winston.format.combine(
+              winston.format.timestamp(),
+              winston.format.json(),
+            )
+          : winston.format.combine(
+              winston.format.colorize(),
+              winston.format.timestamp({ format: 'HH:mm:ss' }),
+              winston.format.printf(({ timestamp, level, message, context, ...rest }) => {
+                const ctx = context ? ` [${context}]` : '';
+                const extra = Object.keys(rest).length ? ' ' + JSON.stringify(rest) : '';
+                return `${timestamp} ${level}${ctx}: ${message}${extra}`;
+              }),
+            ),
+      }),
+    ],
+  });
+}
 
 async function bootstrap() {
+  const env = process.env.NODE_ENV ?? 'development';
   const app = await NestFactory.create(AppModule, {
     rawBody: true, // required for Stripe webhook signature verification
-    logger: ['error', 'warn', 'log', 'debug', 'verbose'],
+    logger: createWinstonLogger(env),
   });
 
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT', 3001);
-  const env = configService.get<string>('NODE_ENV', 'development');
   const frontendUrl = configService.get<string>('FRONTEND_URL', 'http://localhost:3000');
 
   // ── Cookie parser (must be before other middleware) ──────────
   app.use(cookieParser());
 
-  // ── Security headers (Helmet) ─────────────────────────────────
-  app.use(helmet({
-    contentSecurityPolicy: env === 'production' ? undefined : false, // relax CSP in dev
-    crossOriginEmbedderPolicy: false,
-  }));
+  // ── Security headers (Helmet + CSP) ──────────────────────────
+  app.use(
+    helmet({
+      crossOriginEmbedderPolicy: false,
+      contentSecurityPolicy: env === 'production'
+        ? {
+            directives: {
+              defaultSrc: ["'self'"],
+              scriptSrc: ["'self'"],
+              styleSrc: ["'self'", "'unsafe-inline'"], // Swagger UI needs inline styles
+              imgSrc: ["'self'", 'data:', 'https:'],
+              connectSrc: ["'self'"],
+              fontSrc: ["'self'"],
+              objectSrc: ["'none'"],
+              frameSrc: ["'none'"],
+              baseUri: ["'self'"],
+              formAction: ["'self'"],
+              upgradeInsecureRequests: [],
+            },
+          }
+        : false, // relax CSP in dev (Swagger UI, etc.)
+    }),
+  );
   app.use(compression());
 
   // ── CORS — strict: only allow our frontend, with credentials ──
@@ -41,8 +85,9 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });
 
-  // ── Global validation pipe ────────────────────────────────────
+  // ── Global pipes (sanitize first, then validate) ──────────────
   app.useGlobalPipes(
+    new SanitizePipe(),
     new ValidationPipe({
       whitelist: true,             // strip unknown properties
       forbidNonWhitelisted: true,  // reject requests with extra fields

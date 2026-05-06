@@ -10,7 +10,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { TransferDto } from './dto/transfer.dto';
 import { TransactionFiltersDto } from './dto/transaction-filters.dto';
 import { TransactionDto, PaginatedTransactions } from '@easypay/shared';
-import { calculateFee, MAX_TRANSFER_AMOUNT, MIN_TRANSFER_AMOUNT } from '@easypay/shared';
+import { calculateFee, MAX_TRANSFER_AMOUNT, MIN_TRANSFER_AMOUNT, DAILY_TRANSFER_LIMIT } from '@easypay/shared';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
@@ -38,6 +38,26 @@ export class TransactionsService {
 
     if (senderWallet.accountNumber === dto.toAccountNumber) {
       throw new BadRequestException('Cannot transfer to your own wallet');
+    }
+
+    // ── Daily transfer limit check ────────────────────────────
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const dailyTotal = await this.prisma.transaction.aggregate({
+      where: {
+        senderWalletId: senderWallet.id,
+        type: 'TRANSFER',
+        status: 'COMPLETED',
+        createdAt: { gte: startOfDay },
+      },
+      _sum: { amount: true },
+    });
+    const sentToday = Number(dailyTotal._sum.amount ?? 0);
+    if (sentToday + amount > DAILY_TRANSFER_LIMIT) {
+      throw new BadRequestException(
+        `Daily transfer limit of $${DAILY_TRANSFER_LIMIT.toLocaleString()} exceeded. ` +
+        `You have sent $${sentToday.toFixed(2)} today.`,
+      );
     }
 
     const receiverWallet = await this.walletService.getWalletByAccountNumber(dto.toAccountNumber);
@@ -145,6 +165,47 @@ export class TransactionsService {
     });
     if (!tx) throw new NotFoundException('Transaction not found');
     return this.toDto(tx);
+  }
+
+  // ── CSV export ────────────────────────────────────────────────
+  async exportCsv(userId: string, filters: TransactionFiltersDto): Promise<string> {
+    const wallet = await this.prisma.wallet.findUnique({ where: { userId } });
+    if (!wallet) throw new NotFoundException('Wallet not found');
+
+    const { type, status, from, to } = filters;
+    const where: Prisma.TransactionWhereInput = {
+      OR: [{ senderWalletId: wallet.id }, { receiverWalletId: wallet.id }],
+      ...(type && { type }),
+      ...(status && { status }),
+      ...(from || to ? { createdAt: {
+        ...(from && { gte: new Date(from) }),
+        ...(to && { lte: new Date(to) }),
+      }} : {}),
+    };
+
+    const rows = await this.prisma.transaction.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: 10000, // safety cap
+    });
+
+    const header = 'Date,Type,Status,Amount,Fee,Currency,Description,Direction\n';
+    const lines = rows.map((tx) => {
+      const direction = tx.senderWalletId === wallet.id ? 'DEBIT' : 'CREDIT';
+      const description = (tx.description ?? '').replace(/,/g, ' ');
+      return [
+        tx.createdAt.toISOString(),
+        tx.type,
+        tx.status,
+        tx.amount.toString(),
+        tx.fee.toString(),
+        tx.currency,
+        description,
+        direction,
+      ].join(',');
+    });
+
+    return header + lines.join('\n');
   }
 
   toDto(tx: any): TransactionDto {

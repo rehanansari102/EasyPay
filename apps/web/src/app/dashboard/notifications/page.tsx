@@ -22,8 +22,8 @@ interface NotificationDto {
   userId: string;
   type: string;
   title: string;
-  body: string;
-  read: boolean;
+  message: string;
+  isRead: boolean;
   createdAt: string;
 }
 
@@ -69,10 +69,10 @@ function NotifIcon({ type }: { type: string }) {
 export default function NotificationsPage() {
   const queryClient = useQueryClient();
 
-  const { data, isLoading } = useQuery<{ data: NotificationDto[]; total: number }>({
+  const { data, isLoading } = useQuery<NotificationDto[]>({
     queryKey: ['notifications'],
     queryFn: () => notificationsApi.list(false),
-  });
+  } as any);
 
   const { data: unreadData } = useQuery<{ count: number }>({
     queryKey: ['notifications-unread-count'],
@@ -98,7 +98,7 @@ export default function NotificationsPage() {
     onError: () => toast.error('Failed to mark all as read'),
   });
 
-  const notifications: NotificationDto[] = data?.data ?? [];
+  const notifications: NotificationDto[] = (Array.isArray(data) ? data : (data as any)?.data) ?? [];
   const unreadCount = unreadData?.count ?? 0;
 
   return (
@@ -115,7 +115,7 @@ export default function NotificationsPage() {
             )}
           </h1>
           <p className="text-muted-foreground text-sm mt-0.5">
-            {data?.total ?? 0} total · {unreadCount} unread
+            {notifications.length} total · {unreadCount} unread
           </p>
         </div>
 
@@ -166,7 +166,7 @@ export default function NotificationsPage() {
                 key={notif.id}
                 className={cn(
                   'flex items-start gap-4 p-4 transition',
-                  !notif.read
+                  !notif.isRead
                     ? 'bg-primary/[0.03] hover:bg-primary/[0.06]'
                     : 'hover:bg-gray-50 dark:hover:bg-gray-800/50',
                 )}
@@ -175,22 +175,22 @@ export default function NotificationsPage() {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className={cn('text-sm', !notif.read ? 'font-semibold' : 'font-medium')}>
+                    <p className={cn('text-sm', !notif.isRead ? 'font-semibold' : 'font-medium')}>
                       {notif.title}
                     </p>
-                    {!notif.read && (
+                    {!notif.isRead && (
                       <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
                     )}
                   </div>
                   <p className="text-muted-foreground text-xs mt-0.5 leading-relaxed">
-                    {notif.body}
+                    {notif.message}
                   </p>
                   <p className="text-muted-foreground/60 text-[11px] mt-1.5">
                     {format(new Date(notif.createdAt), 'MMM d, yyyy · h:mm a')}
                   </p>
                 </div>
 
-                {!notif.read && (
+                {!notif.isRead && (
                   <button
                     onClick={() => markRead(notif.id)}
                     disabled={isMarkingOne}
