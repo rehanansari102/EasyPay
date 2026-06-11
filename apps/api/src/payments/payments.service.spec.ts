@@ -4,10 +4,11 @@ import { ConfigService } from '@nestjs/config';
 import { PaymentsService } from './payments.service';
 import { PrismaService } from '../database/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { MailerService } from '../mailer/mailer.service';
 
 // Mock Stripe constructor so no real HTTP calls are made
 jest.mock('stripe', () => {
-  return jest.fn().mockImplementation(() => ({
+  const MockStripe = jest.fn().mockImplementation(() => ({
     paymentIntents: {
       create: jest.fn().mockResolvedValue({ id: 'pi_test', client_secret: 'secret_test' }),
     },
@@ -15,10 +16,12 @@ jest.mock('stripe', () => {
       constructEvent: jest.fn(),
     },
   }));
+  return { __esModule: true, default: MockStripe };
 });
 
 const mockPrisma = {
   wallet: { findUnique: jest.fn() },
+  user: { findUnique: jest.fn().mockResolvedValue(null) },
   paymentOrder: { create: jest.fn(), update: jest.fn(), findUnique: jest.fn() },
   transaction: { create: jest.fn() },
 };
@@ -55,6 +58,7 @@ describe('PaymentsService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: ConfigService, useValue: mockConfig },
         { provide: NotificationsService, useValue: mockNotifications },
+        { provide: MailerService, useValue: { sendWithdrawalConfirmation: jest.fn().mockResolvedValue(undefined) } },
       ],
     }).compile();
 

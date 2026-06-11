@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { CacheModule } from '@nestjs/cache-manager';
@@ -14,6 +14,7 @@ import { HealthModule } from './health/health.module';
 import { AdminModule } from './admin/admin.module';
 import { KycModule } from './kyc/kyc.module';
 import { CommonModule } from './common/common.module';
+import { RequestIdMiddleware } from './common/request-id.middleware';
 import appConfig from './config/app.config';
 import { validate } from './config/env.validation';
 
@@ -57,4 +58,8 @@ import { validate } from './config/env.validation';
     KycModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestIdMiddleware).forRoutes('*');
+  }
+}

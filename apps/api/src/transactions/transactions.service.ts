@@ -7,6 +7,7 @@
 import { PrismaService } from '../database/prisma.service';
 import { WalletService } from '../wallet/wallet.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { MailerService } from '../mailer/mailer.service';
 import { TransferDto } from './dto/transfer.dto';
 import { TransactionFiltersDto } from './dto/transaction-filters.dto';
 import { TransactionDto, PaginatedTransactions } from '@easypay/shared';
@@ -19,6 +20,7 @@ export class TransactionsService {
     private prisma: PrismaService,
     private walletService: WalletService,
     private notifications: NotificationsService,
+    private mailer: MailerService,
   ) {}
 
   // ── Transfer ──────────────────────────────────────────────────
@@ -63,6 +65,34 @@ export class TransactionsService {
     const receiverWallet = await this.walletService.getWalletByAccountNumber(dto.toAccountNumber);
     if (receiverWallet.status !== 'ACTIVE') throw new BadRequestException('Recipient wallet is not active');
 
+    // ── Virtual card spending limit check ─────────────────────
+    if (dto.cardId) {
+      const card = await this.prisma.virtualCard.findFirst({
+        where: { id: dto.cardId, walletId: senderWallet.id },
+      });
+      if (!card) throw new NotFoundException('Virtual card not found');
+      if (card.status !== 'ACTIVE') throw new ForbiddenException('Card is not active');
+
+      if (card.spendingLimit !== null) {
+        const cardSpentToday = await this.prisma.transaction.aggregate({
+          where: {
+            senderWalletId: senderWallet.id,
+            type: 'TRANSFER',
+            status: 'COMPLETED',
+            metadata: { path: ['cardId'], equals: dto.cardId },
+            createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) },
+          },
+          _sum: { amount: true },
+        });
+        const spentToday = Number(cardSpentToday._sum.amount ?? 0);
+        if (spentToday + amount > Number(card.spendingLimit)) {
+          throw new BadRequestException(
+            `Card spending limit of $${Number(card.spendingLimit).toFixed(2)}/day exceeded`,
+          );
+        }
+      }
+    }
+
     const fee = calculateFee(amount);
     const totalDeduction = amount + fee;
 
@@ -92,6 +122,7 @@ export class TransactionsService {
           description: dto.description,
           senderWalletId: senderWallet.id,
           receiverWalletId: receiverWallet.id,
+          ...(dto.cardId && { metadata: { cardId: dto.cardId } }),
         },
       });
     });
@@ -108,6 +139,52 @@ export class TransactionsService {
       message: `You received $${amount} in your wallet.`,
       type: 'TRANSACTION',
     });
+
+    // ── Email receipts (fire-and-forget) ─────────────────────
+    this.prisma.user
+      .findMany({
+        where: { id: { in: [userId, receiverWallet.userId] } },
+        select: { id: true, email: true, firstName: true, lastName: true },
+      })
+      .then((users) => {
+        const sender = users.find((u) => u.id === userId);
+        const receiver = users.find((u) => u.id === receiverWallet.userId);
+        const recipientName = receiver
+          ? `${receiver.firstName} ${receiver.lastName}`
+          : 'Recipient';
+        const senderName = sender
+          ? `${sender.firstName} ${sender.lastName}`
+          : 'Sender';
+
+        if (sender) {
+          this.mailer
+            .sendTransactionReceipt(sender.email, sender.firstName, {
+              direction: 'sent',
+              amount,
+              currency: senderWallet.currency,
+              fee,
+              counterpartyName: recipientName,
+              reference: tx.reference,
+              description: dto.description,
+              timestamp: tx.createdAt,
+            })
+            .catch(() => {/* non-critical */});
+        }
+        if (receiver) {
+          this.mailer
+            .sendTransactionReceipt(receiver.email, receiver.firstName, {
+              direction: 'received',
+              amount,
+              currency: senderWallet.currency,
+              counterpartyName: senderName,
+              reference: tx.reference,
+              description: dto.description,
+              timestamp: tx.createdAt,
+            })
+            .catch(() => {/* non-critical */});
+        }
+      })
+      .catch(() => {/* non-critical */});
 
     return this.toDto(tx);
   }

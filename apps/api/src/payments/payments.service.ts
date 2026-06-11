@@ -1,5 +1,6 @@
 ﻿import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
@@ -7,7 +8,9 @@
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../database/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { MailerService } from '../mailer/mailer.service';
 import { CreateTopupDto } from './dto/create-topup.dto';
+import { CreateWithdrawalDto } from './dto/create-withdrawal.dto';
 import Stripe from 'stripe';
 import { toCents, MIN_TOPUP_AMOUNT, MAX_TOPUP_AMOUNT } from '@easypay/shared';
 import { Prisma } from '@prisma/client';
@@ -21,6 +24,7 @@ export class PaymentsService {
     private configService: ConfigService,
     private prisma: PrismaService,
     private notifications: NotificationsService,
+    private mailer: MailerService,
   ) {
     this.stripe = new Stripe(
       this.configService.get<string>('STRIPE_SECRET_KEY') ?? 'sk_test_placeholder',
@@ -148,5 +152,92 @@ export class PaymentsService {
       data: { status: 'failed' },
     });
     this.logger.warn(`Payment failed for intent: ${intent.id}`);
+  }
+
+  // ── Withdrawal ────────────────────────────────────────────────
+  async requestWithdrawal(userId: string, dto: CreateWithdrawalDto) {
+    const amount = Number(dto.amount);
+
+    const wallet = await this.prisma.wallet.findUnique({ where: { userId } });
+    if (!wallet) throw new NotFoundException('Wallet not found');
+    if (wallet.status !== 'ACTIVE') throw new ForbiddenException('Wallet is suspended');
+    if (Number(wallet.balance) < amount) {
+      throw new BadRequestException('Insufficient wallet balance');
+    }
+
+    // Use Stripe Payout (requires connected account or platform payout in live mode)
+    // In test/dev mode we simulate via a Stripe Transfer to a bank account token
+    const payout = await this.stripe.payouts.create(
+      {
+        amount: toCents(amount),
+        currency: wallet.currency.toLowerCase(),
+        metadata: {
+          userId,
+          walletId: wallet.id,
+          bankAccountNumber: dto.bankAccountNumber.slice(-4), // store only last 4
+          accountHolderName: dto.accountHolderName,
+        },
+        description: `EasyPay withdrawal for user ${userId}`,
+        method: 'standard',
+      },
+      // In production you would use a connected account; for platform wallets
+      // this runs against the platform's Stripe account balance
+    ).catch(async (err) => {
+      // Stripe payouts require real bank details in live mode.
+      // In test mode we record a PENDING withdrawal and simulate success.
+      this.logger.warn(`Stripe payout skipped (test mode or insufficient balance): ${err.message}`);
+      return null;
+    });
+
+    // Deduct balance + create transaction atomically
+    const result = await this.prisma.$transaction(async (prisma) => {
+      await prisma.wallet.update({
+        where: { id: wallet.id },
+        data: { balance: { decrement: new Prisma.Decimal(amount) } },
+      });
+
+      return prisma.transaction.create({
+        data: {
+          type: 'WITHDRAWAL',
+          status: payout ? 'COMPLETED' : 'PENDING',
+          amount: new Prisma.Decimal(amount),
+          fee: 0,
+          currency: wallet.currency,
+          description: `Withdrawal to account ending ****${dto.bankAccountNumber.slice(-4)}`,
+          senderWalletId: wallet.id,
+          metadata: {
+            stripePayoutId: payout?.id ?? null,
+            bankAccountLast4: dto.bankAccountNumber.slice(-4),
+            accountHolderName: dto.accountHolderName,
+          },
+        },
+      });
+    });
+
+    await this.notifications.send(userId, {
+      title: 'Withdrawal Initiated',
+      message: `$${amount.toFixed(2)} withdrawal to account ****${dto.bankAccountNumber.slice(-4)} is ${payout ? 'processing' : 'pending'}.`,
+      type: 'TRANSACTION',
+    });
+
+    // Email confirmation (fire-and-forget)
+    this.prisma.user
+      .findUnique({ where: { id: userId }, select: { email: true, firstName: true } })
+      .then((user) => {
+        if (user) {
+          this.mailer
+            .sendWithdrawalConfirmation(user.email, user.firstName, {
+              amount,
+              currency: wallet.currency,
+              bankLast4: dto.bankAccountNumber.slice(-4),
+              reference: result.reference,
+            })
+            .catch(() => {/* non-critical */});
+        }
+      })
+      .catch(() => {/* non-critical */});
+
+    this.logger.log(`Withdrawal requested: wallet=${wallet.id} amount=${amount}`);
+    return result;
   }
 }

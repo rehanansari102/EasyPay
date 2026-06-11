@@ -6,6 +6,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Public } from '../auth/decorators/public.decorator';
 import { CreateTopupDto } from './dto/create-topup.dto';
+import { CreateWithdrawalDto } from './dto/create-withdrawal.dto';
 
 @ApiTags('payments')
 @Controller({ path: 'payments', version: '1' })
@@ -18,6 +19,14 @@ export class PaymentsController {
   @ApiOperation({ summary: 'Create a Stripe PaymentIntent for wallet top-up' })
   createTopup(@CurrentUser('id') userId: string, @Body() dto: CreateTopupDto) {
     return this.paymentsService.createTopup(userId, dto);
+  }
+
+  @ApiBearerAuth('JWT')
+  @UseGuards(JwtAuthGuard)
+  @Post('withdraw')
+  @ApiOperation({ summary: 'Request a withdrawal from wallet to bank account' })
+  requestWithdrawal(@CurrentUser('id') userId: string, @Body() dto: CreateWithdrawalDto) {
+    return this.paymentsService.requestWithdrawal(userId, dto);
   }
 
   // Stripe webhooks must be PUBLIC (no JWT) and receive raw body

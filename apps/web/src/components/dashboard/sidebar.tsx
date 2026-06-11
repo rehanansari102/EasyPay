@@ -14,6 +14,8 @@ import {
   Users,
   BarChart3,
   ScrollText,
+  FileCheck,
+  ArrowDownToLine,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth.store';
@@ -24,6 +26,7 @@ const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/wallet', label: 'Wallet', icon: Wallet },
   { href: '/dashboard/transactions', label: 'Transactions', icon: ArrowLeftRight },
+  { href: '/dashboard/withdraw', label: 'Withdraw', icon: ArrowDownToLine },
   { href: '/dashboard/cards', label: 'Virtual Cards', icon: CreditCard },
   { href: '/dashboard/notifications', label: 'Notifications', icon: Bell },
   { href: '/dashboard/kyc', label: 'Identity (KYC)', icon: ShieldCheck },
@@ -32,6 +35,8 @@ const navItems = [
 const adminNavItems = [
   { href: '/dashboard/admin', label: 'Overview', icon: BarChart3 },
   { href: '/dashboard/admin/users', label: 'Users', icon: Users },
+  { href: '/dashboard/admin/kyc', label: 'KYC Review', icon: FileCheck },
+  { href: '/dashboard/admin/wallets', label: 'Wallets', icon: Wallet },
   { href: '/dashboard/admin/transactions', label: 'Transactions', icon: ArrowLeftRight },
   { href: '/dashboard/admin/audit-logs', label: 'Audit Logs', icon: ScrollText },
 ];

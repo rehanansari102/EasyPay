@@ -13,6 +13,7 @@ import {
   Snowflake,
   Plus,
   X,
+  Trash2,
   Loader2,
   Info,
 } from 'lucide-react';
@@ -34,12 +35,17 @@ function VirtualCardDisplay({
   card,
   onToggleFreeze,
   isFreezing,
+  onDelete,
+  isDeleting,
 }: {
   card: VirtualCardDto;
   onToggleFreeze: (id: string) => void;
   isFreezing: boolean;
+  onDelete: (id: string) => void;
+  isDeleting: boolean;
 }) {
   const isFrozen = card.status === 'FROZEN';
+  const isCancelled = card.status === 'CANCELLED';
 
   return (
     <div
@@ -90,12 +96,13 @@ function VirtualCardDisplay({
       {/* Freeze button */}
       <button
         onClick={() => onToggleFreeze(card.id)}
-        disabled={isFreezing}
+        disabled={isFreezing || isCancelled}
         className={cn(
           'w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition relative z-10',
           isFrozen
             ? 'bg-sky-400/20 text-sky-200 hover:bg-sky-400/30'
             : 'bg-white/10 text-white hover:bg-white/20',
+          isCancelled && 'opacity-40 cursor-not-allowed',
         )}
       >
         {isFreezing ? (
@@ -105,6 +112,22 @@ function VirtualCardDisplay({
         )}
         {isFrozen ? 'Unfreeze Card' : 'Freeze Card'}
       </button>
+
+      {/* Cancel button — only shown when frozen */}
+      {isFrozen && (
+        <button
+          onClick={() => {
+            if (window.confirm('Cancel this card permanently? This cannot be undone.')) {
+              onDelete(card.id);
+            }
+          }}
+          disabled={isDeleting}
+          className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium bg-red-500/20 text-red-300 hover:bg-red-500/30 transition relative z-10 disabled:opacity-50"
+        >
+          {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+          Cancel Card
+        </button>
+      )}
     </div>
   );
 }
@@ -139,6 +162,16 @@ export default function CardsPage() {
     },
     onError: (err: any) =>
       toast.error(err.response?.data?.message ?? err.message ?? 'Failed to update card'),
+  });
+
+  const { mutate: deleteCard, variables: deletingCardId, isPending: isDeleting } = useMutation({
+    mutationFn: walletApi.deleteCard,
+    onSuccess: () => {
+      toast.success('Card cancelled successfully');
+      queryClient.invalidateQueries({ queryKey: ['wallet-cards'] });
+    },
+    onError: (err: any) =>
+      toast.error(err.response?.data?.message ?? err.message ?? 'Failed to cancel card'),
   });
 
   const {
@@ -215,6 +248,8 @@ export default function CardsPage() {
               card={card}
               onToggleFreeze={(id) => toggleFreeze(id)}
               isFreezing={isFreezing && freezingCardId === card.id}
+              onDelete={(id) => deleteCard(id)}
+              isDeleting={isDeleting && deletingCardId === card.id}
             />
           ))}
         </div>

@@ -45,6 +45,9 @@ export const authApi = {
   disable2fa: (code: string) =>
     apiClient.post<{ message: string }>('/auth/2fa/disable', { code }).then((r) => r.data),
 
+  changePassword: (currentPassword: string, newPassword: string) =>
+    apiClient.patch<{ message: string }>('/auth/change-password', { currentPassword, newPassword }).then((r) => r.data),
+
   verifyTwoFactor: (tempSessionId: string, code: string) =>
     apiClient
       .post<{ user: any }>('/auth/2fa/verify', { tempSessionId, code })
@@ -58,6 +61,8 @@ export const walletApi = {
     apiClient.post('/wallet/cards', data).then((r) => r.data),
   toggleFreezeCard: (cardId: string) =>
     apiClient.patch(`/wallet/cards/${cardId}/toggle-freeze`).then((r) => r.data),
+  deleteCard: (cardId: string) =>
+    apiClient.delete(`/wallet/cards/${cardId}`).then((r) => r.data),
 };
 
 export const transactionsApi = {
@@ -71,6 +76,12 @@ export const transactionsApi = {
 export const paymentsApi = {
   createTopup: (amount: number) =>
     apiClient.post('/payments/topup', { amount }).then((r) => r.data),
+  requestWithdrawal: (data: {
+    amount: number;
+    bankAccountNumber: string;
+    bankRoutingNumber: string;
+    accountHolderName: string;
+  }) => apiClient.post('/payments/withdraw', data).then((r) => r.data),
 };
 
 export const notificationsApi = {
@@ -110,6 +121,12 @@ export const adminApi = {
   activateUser: (id: string) => apiClient.patch(`/admin/users/${id}/activate`).then((r) => r.data),
   updateKyc: (id: string, status: 'APPROVED' | 'REJECTED', notes?: string) =>
     apiClient.patch(`/admin/users/${id}/kyc`, { status, notes }).then((r) => r.data),
+
+  // KYC submissions
+  getKycSubmissions: (params?: { page?: number; limit?: number; status?: string }) =>
+    apiClient.get('/admin/kyc', { params }).then((r) => r.data),
+  getKycDocument: (userId: string) =>
+    apiClient.get(`/admin/kyc/${userId}`).then((r) => r.data),
 
   // Wallets
   getWallets: (params?: { page?: number; limit?: number }) =>

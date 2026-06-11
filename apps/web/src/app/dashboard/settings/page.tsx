@@ -441,7 +441,7 @@ function ChangePasswordSection() {
 
   const mutation = useMutation({
     mutationFn: ({ current, next }: { current: string; next: string }) =>
-      authApi.resetPassword(current, next),
+      authApi.changePassword(current, next),
     onSuccess: () => {
       toast.success('Password changed successfully');
       setCurrentPassword('');

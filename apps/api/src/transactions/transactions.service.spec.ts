@@ -3,6 +3,7 @@ import { TransactionsService } from './transactions.service';
 import { PrismaService } from '../database/prisma.service';
 import { WalletService } from '../wallet/wallet.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { MailerService } from '../mailer/mailer.service';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 describe('TransactionsService', () => {
@@ -37,7 +38,8 @@ describe('TransactionsService', () => {
           provide: PrismaService,
           useValue: {
             wallet: { findUnique: jest.fn() },
-            transaction: { findMany: jest.fn(), count: jest.fn(), findFirst: jest.fn() },
+            user: { findMany: jest.fn().mockResolvedValue([]) },
+            transaction: { findMany: jest.fn(), count: jest.fn(), findFirst: jest.fn(), aggregate: jest.fn() },
             $transaction: jest.fn(),
           },
         },
@@ -49,6 +51,10 @@ describe('TransactionsService', () => {
           provide: NotificationsService,
           useValue: { send: jest.fn() },
         },
+        {
+          provide: MailerService,
+          useValue: { sendTransactionReceipt: jest.fn().mockResolvedValue(undefined) },
+        },
       ],
     }).compile();
 
@@ -56,6 +62,9 @@ describe('TransactionsService', () => {
     prisma = module.get(PrismaService) as any;
     walletService = module.get(WalletService) as any;
     notificationsService = module.get(NotificationsService) as any;
+
+    // Default: no prior transactions today (so daily limit is not hit)
+    (prisma.transaction.aggregate as jest.Mock).mockResolvedValue({ _sum: { amount: null } });
   });
 
   describe('transfer', () => {

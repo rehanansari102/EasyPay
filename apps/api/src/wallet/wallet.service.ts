@@ -75,6 +75,17 @@ export class WalletService {
     return this.cardToDto(updated);
   }
 
+  async deleteCard(userId: string, cardId: string): Promise<void> {
+    const card = await this.validateCardOwnership(userId, cardId);
+    if (card.status === 'ACTIVE') {
+      throw new ForbiddenException('Freeze the card before cancelling it');
+    }
+    await this.prisma.virtualCard.update({
+      where: { id: cardId },
+      data: { status: 'CANCELLED' },
+    });
+  }
+
   // ── Helpers ───────────────────────────────────────────────────
   private async validateCardOwnership(userId: string, cardId: string) {
     const wallet = await this.prisma.wallet.findUnique({ where: { userId } });

@@ -62,9 +62,11 @@ export default function AdminOverviewPage() {
       </div>
 
       {/* Quick links */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Manage Users', desc: 'View, suspend, approve KYC', href: '/dashboard/admin/users', color: 'from-indigo-500 to-violet-600' },
+          { label: 'Manage Users', desc: 'View, suspend, activate', href: '/dashboard/admin/users', color: 'from-indigo-500 to-violet-600' },
+          { label: 'KYC Review', desc: 'Approve or reject documents', href: '/dashboard/admin/kyc', color: 'from-amber-500 to-orange-500' },
+          { label: 'Wallets', desc: 'Suspend or activate wallets', href: '/dashboard/admin/wallets', color: 'from-sky-500 to-cyan-600' },
           { label: 'Transactions', desc: 'Review and reverse transfers', href: '/dashboard/admin/transactions', color: 'from-rose-500 to-orange-500' },
           { label: 'Audit Logs', desc: 'Full platform activity trail', href: '/dashboard/admin/audit-logs', color: 'from-emerald-500 to-teal-600' },
         ].map((item) => (

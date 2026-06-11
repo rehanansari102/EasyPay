@@ -136,7 +136,7 @@ export class MailerService {
     await this.send(to, '🔐 Reset your EasyPay password', html);
   }
 
-  // ── Account Locked ────────────────────────────────────────────
+  // ── Account Locked ─────────────────────────────────────────────
   async sendAccountLockedAlert(to: string, firstName: string) {
     const resetUrl = `${this.frontendUrl}/auth/forgot-password`;
     const html = this.layout(`
@@ -163,5 +163,112 @@ export class MailerService {
       </p>
     `);
     await this.send(to, '🚨 EasyPay: Your account has been temporarily locked', html);
+  }
+
+  // ── Transaction Receipt ───────────────────────────────────────
+  async sendTransactionReceipt(
+    to: string,
+    firstName: string,
+    opts: {
+      direction: 'sent' | 'received';
+      amount: number;
+      currency: string;
+      fee?: number;
+      counterpartyName: string;
+      reference: string;
+      description?: string;
+      timestamp: Date;
+    },
+  ) {
+    const isSent = opts.direction === 'sent';
+    const amountStr = `${opts.currency} ${opts.amount.toFixed(2)}`;
+    const feeStr = opts.fee ? `${opts.currency} ${Number(opts.fee).toFixed(2)}` : 'None';
+    const dateStr = opts.timestamp.toLocaleString('en-US', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
+
+    const html = this.layout(`
+      <div style="text-align:center;margin-bottom:24px;">
+        <div style="display:inline-block;background:${isSent ? 'linear-gradient(135deg,#fee2e2,#fecaca)' : 'linear-gradient(135deg,#d1fae5,#a7f3d0)'};border-radius:50%;width:64px;height:64px;line-height:64px;font-size:28px;">
+          ${isSent ? '&#128197;' : '&#127881;'}
+        </div>
+      </div>
+      <h1 style="margin:0 0 6px;font-size:22px;font-weight:700;color:#111827;text-align:center;">
+        ${isSent ? 'Payment Sent' : 'Payment Received'}
+      </h1>
+      <p style="margin:0 0 28px;font-size:32px;font-weight:800;color:${isSent ? '#dc2626' : '#059669'};text-align:center;">
+        ${isSent ? '-' : '+'}${amountStr}
+      </p>
+
+      <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin-bottom:24px;">
+        <tr style="background:#f9fafb;">
+          <td style="padding:12px 16px;font-size:13px;color:#6b7280;border-bottom:1px solid #e5e7eb;">
+            ${isSent ? 'Recipient' : 'Sender'}
+          </td>
+          <td style="padding:12px 16px;font-size:13px;font-weight:600;color:#111827;text-align:right;border-bottom:1px solid #e5e7eb;">
+            ${opts.counterpartyName}
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:12px 16px;font-size:13px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Amount</td>
+          <td style="padding:12px 16px;font-size:13px;font-weight:600;color:#111827;text-align:right;border-bottom:1px solid #e5e7eb;">${amountStr}</td>
+        </tr>
+        <tr style="background:#f9fafb;">
+          <td style="padding:12px 16px;font-size:13px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Fee</td>
+          <td style="padding:12px 16px;font-size:13px;font-weight:600;color:#111827;text-align:right;border-bottom:1px solid #e5e7eb;">${feeStr}</td>
+        </tr>
+        <tr>
+          <td style="padding:12px 16px;font-size:13px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Reference</td>
+          <td style="padding:12px 16px;font-size:13px;font-family:monospace;color:#6366f1;text-align:right;border-bottom:1px solid #e5e7eb;">${opts.reference}</td>
+        </tr>
+        ${opts.description ? `
+        <tr style="background:#f9fafb;">
+          <td style="padding:12px 16px;font-size:13px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Note</td>
+          <td style="padding:12px 16px;font-size:13px;color:#374151;text-align:right;border-bottom:1px solid #e5e7eb;">${opts.description}</td>
+        </tr>` : ''}
+        <tr style="${opts.description ? '' : 'background:#f9fafb;'}">
+          <td style="padding:12px 16px;font-size:13px;color:#6b7280;">Date</td>
+          <td style="padding:12px 16px;font-size:13px;color:#374151;text-align:right;">${dateStr}</td>
+        </tr>
+      </table>
+
+      <p style="font-size:13px;color:#9ca3af;text-align:center;margin:0;">
+        If you didn't authorise this transaction, please contact support immediately.
+      </p>
+    `);
+
+    const subject = isSent
+      ? `💸 You sent ${amountStr} — EasyPay`
+      : `🎉 You received ${amountStr} — EasyPay`;
+    await this.send(to, subject, html);
+  }
+
+  // ── Withdrawal Confirmation ───────────────────────────────────
+  async sendWithdrawalConfirmation(
+    to: string,
+    firstName: string,
+    opts: { amount: number; currency: string; bankLast4: string; reference: string },
+  ) {
+    const amountStr = `${opts.currency} ${opts.amount.toFixed(2)}`;
+    const html = this.layout(`
+      <div style="text-align:center;margin-bottom:24px;">
+        <div style="display:inline-block;background:linear-gradient(135deg,#e0e7ff,#c7d2fe);border-radius:50%;width:64px;height:64px;line-height:64px;font-size:28px;">&#127968;</div>
+      </div>
+      <h1 style="margin:0 0 6px;font-size:22px;font-weight:700;color:#111827;text-align:center;">Withdrawal Initiated</h1>
+      <p style="margin:0 0 24px;font-size:15px;color:#6b7280;text-align:center;line-height:1.6;">
+        Hi <strong style="color:#111827;">${firstName}</strong>, your withdrawal of
+        <strong style="color:#6366f1;">${amountStr}</strong> has been submitted to your bank
+        account ending <strong style="color:#111827;">****${opts.bankLast4}</strong>.
+      </p>
+      <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:16px 20px;margin-bottom:24px;text-align:center;">
+        <p style="margin:0 0 4px;font-size:13px;color:#0369a1;font-weight:600;">&#8987; Processing time: 1–3 business days</p>
+        <p style="margin:0;font-size:12px;color:#0284c7;">Reference: <span style="font-family:monospace;">${opts.reference}</span></p>
+      </div>
+      <p style="font-size:12px;color:#d1d5db;text-align:center;margin:0;">
+        If you did not request this withdrawal, please contact support immediately.
+      </p>
+    `);
+    await this.send(to, `🏦 Withdrawal of ${amountStr} initiated — EasyPay`, html);
   }
 }

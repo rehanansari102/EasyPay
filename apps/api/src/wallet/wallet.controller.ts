@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { WalletService } from './wallet.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -34,5 +34,12 @@ export class WalletController {
   @ApiOperation({ summary: 'Freeze or unfreeze a virtual card' })
   toggleFreeze(@CurrentUser('id') userId: string, @Param('id') cardId: string) {
     return this.walletService.freezeCard(userId, cardId);
+  }
+
+  @Delete('cards/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Cancel (soft-delete) a virtual card — must be frozen first' })
+  deleteCard(@CurrentUser('id') userId: string, @Param('id') cardId: string) {
+    return this.walletService.deleteCard(userId, cardId);
   }
 }

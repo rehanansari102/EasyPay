@@ -40,6 +40,7 @@ const mockMailer = {
 
 const mockUsers = {
   findById: jest.fn(),
+  toDto: jest.fn((u: any) => ({ id: u.id, email: u.email, firstName: u.firstName, lastName: u.lastName, role: u.role })),
 };
 
 describe('AuthService', () => {
@@ -101,7 +102,7 @@ describe('AuthService', () => {
       expect(mockPrisma.user.create).toHaveBeenCalledWith(
         expect.objectContaining({ data: expect.objectContaining({ email: dto.email }) }),
       );
-      expect(result).toHaveProperty('accessToken');
+      expect(result).toHaveProperty('tokens.accessToken');
       expect(result).toHaveProperty('user');
     });
 
@@ -140,8 +141,8 @@ describe('AuthService', () => {
       mockCache.set.mockResolvedValue(undefined);
 
       const result = await service.register({ email: 'a@b.com', password: 'P@ss1234', firstName: 'A', lastName: 'B' });
-      expect(result).toHaveProperty('accessToken', 'signed-token');
-      expect(result).toHaveProperty('refreshToken', 'signed-token');
+      expect(result).toHaveProperty('tokens.accessToken', 'signed-token');
+      expect(result).toHaveProperty('tokens.refreshToken', 'signed-token');
     });
   });
 });

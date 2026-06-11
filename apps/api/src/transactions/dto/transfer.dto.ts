@@ -1,4 +1,4 @@
-﻿import { IsString, IsNumber, IsOptional, Min, Max, MaxLength } from 'class-validator';
+﻿import { IsString, IsNumber, IsOptional, IsUUID, Min, Max, MaxLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { MAX_TRANSFER_AMOUNT, MIN_TRANSFER_AMOUNT } from '@easypay/shared';
 
@@ -18,4 +18,9 @@ export class TransferDto {
   @IsString()
   @MaxLength(200)
   description?: string;
+
+  @ApiPropertyOptional({ description: 'Optional virtual card ID to charge against (enforces spending limit)' })
+  @IsOptional()
+  @IsUUID()
+  cardId?: string;
 }

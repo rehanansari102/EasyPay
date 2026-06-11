@@ -377,4 +377,24 @@ export class AuthService {
   private generateAccountNumber(): string {
     return Math.floor(1000000000 + Math.random() * 9000000000).toString();
   }
+
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<{ message: string }> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+    if (!user.passwordHash) throw new BadRequestException('Password change unavailable for OAuth accounts');
+
+    const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isValid) throw new UnauthorizedException('Current password is incorrect');
+
+    const hash = await bcrypt.hash(newPassword, 12);
+    await this.prisma.user.update({ where: { id: userId }, data: { passwordHash: hash } });
+
+    await this.prisma.auditLog.create({ data: { userId, action: 'USER_CHANGED_PASSWORD' } });
+
+    return { message: 'Password changed successfully' };
+  }
 }

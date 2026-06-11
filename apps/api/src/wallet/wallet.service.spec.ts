@@ -87,7 +87,7 @@ describe('WalletService', () => {
 
       // encrypt should have been called for cardNumber and cvv
       expect(mockCrypto.encrypt).toHaveBeenCalledTimes(2);
-      expect(result).toHaveProperty('last4');
+      expect(result).toHaveProperty('cardNumberMasked');
     });
 
     it('throws ForbiddenException if wallet is not ACTIVE', async () => {

@@ -5,6 +5,7 @@
   Get,
   HttpCode,
   HttpStatus,
+  Patch,
   Post,
   Req,
   Res,
@@ -200,13 +201,25 @@ export class AuthController {
     return { user: result.user };
   }
 
-  // â”€â”€ Google OAuth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Google OAuth ──────────────────────────────────────────────
   @Public()
   @UseGuards(GoogleOAuthGuard)
   @Get('google')
   @ApiOperation({ summary: 'Redirect to Google OAuth' })
   googleAuth() {
     // Passport handles redirect
+  }
+
+  // ── Change Password ───────────────────────────────────────────
+
+  @Patch('change-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Change password for authenticated users' })
+  changePassword(
+    @CurrentUser('id') userId: string,
+    @Body() body: { currentPassword: string; newPassword: string },
+  ) {
+    return this.authService.changePassword(userId, body.currentPassword, body.newPassword);
   }
 
   @Public()
