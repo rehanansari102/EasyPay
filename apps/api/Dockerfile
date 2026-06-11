@@ -8,12 +8,16 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json ./apps/api/
 COPY packages/database/package.json ./packages/database/
 COPY packages/shared/package.json ./packages/shared/
+# Install all deps including devDependencies (needed for nest CLI + tsc)
 RUN pnpm install --frozen-lockfile
 
 # ── Build ─────────────────────────────────────────────────────
 FROM base AS builder
 WORKDIR /app
+# Copy full node_modules (root + all workspace packages)
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
 COPY . .
 RUN pnpm --filter @easypay/shared build
 RUN pnpm --filter @easypay/api build
