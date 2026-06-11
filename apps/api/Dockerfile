@@ -15,6 +15,7 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+RUN pnpm --filter @easypay/shared build
 RUN pnpm --filter @easypay/api build
 
 # ── Production runner ─────────────────────────────────────────

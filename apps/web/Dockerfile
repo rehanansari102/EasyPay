@@ -13,6 +13,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+RUN pnpm --filter @easypay/shared build
 RUN pnpm --filter @easypay/web build
 
 FROM base AS runner
