@@ -122,6 +122,7 @@ export class UsersService {
       isActive: user.isActive,
       emailVerified: user.emailVerified,
       twoFaEnabled: user.twoFaEnabled,
+      googleId: user.googleId ?? null,
       createdAt: user.createdAt.toISOString(),
     };
   }

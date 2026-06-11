@@ -14,6 +14,7 @@ export interface UserDto {
   isActive: boolean;
   emailVerified: boolean;
   twoFaEnabled: boolean;
+  googleId: string | null;
   createdAt: string;
 }
 
