@@ -33,9 +33,10 @@ COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/packages/database/prisma ./prisma
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nestjs
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nestjs
+
 USER nestjs
 
 EXPOSE 3001
-CMD ["node", "dist/main"]
+ENTRYPOINT ["sh", "-c", "npx prisma migrate deploy --schema=/app/prisma/schema.prisma && node dist/main"]
