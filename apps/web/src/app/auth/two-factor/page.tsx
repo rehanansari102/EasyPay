@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, KeyboardEvent } from 'react';
+import { useRef, useState, KeyboardEvent, Suspense } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { authApi } from '@/lib/api';
 import { useAuthStore } from '@/store/auth.store';
 
-export default function TwoFactorPage() {
+function TwoFactorForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session') ?? '';
@@ -130,5 +130,13 @@ export default function TwoFactorPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function TwoFactorPage() {
+  return (
+    <Suspense fallback={<div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-8 text-center">Loading...</div>}>
+      <TwoFactorForm />
+    </Suspense>
   );
 }
