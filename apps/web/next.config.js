@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['@finvault/shared'],
+  output: 'standalone',
+  transpilePackages: ['@easypay/shared'],
   // Next.js 15: caching defaults changed — fetch requests are no longer cached by default
   // Set per-route or per-fetch as needed
   experimental: {
