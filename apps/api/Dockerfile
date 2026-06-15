@@ -40,4 +40,4 @@ RUN addgroup --system --gid 1001 nodejs && \
 USER nestjs
 
 EXPOSE 3001
-ENTRYPOINT ["sh", "-c", "node_modules/.bin/prisma migrate deploy --schema=/app/prisma/schema.prisma && node dist/main"]
+ENTRYPOINT ["sh", "-c", "packages/database/node_modules/.bin/prisma migrate deploy --schema=/app/prisma/schema.prisma && node dist/main"]
