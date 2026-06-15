@@ -31,6 +31,7 @@ ENV NODE_ENV=production
 
 COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages/database/node_modules ./packages/database/node_modules
 COPY --from=builder /app/packages/database/prisma ./prisma
 
 RUN addgroup --system --gid 1001 nodejs && \
@@ -39,4 +40,4 @@ RUN addgroup --system --gid 1001 nodejs && \
 USER nestjs
 
 EXPOSE 3001
-ENTRYPOINT ["sh", "-c", "npx prisma migrate deploy --schema=/app/prisma/schema.prisma && node dist/main"]
+ENTRYPOINT ["sh", "-c", "node_modules/.bin/prisma migrate deploy --schema=/app/prisma/schema.prisma && node dist/main"]
