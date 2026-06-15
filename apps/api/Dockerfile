@@ -29,13 +29,16 @@ FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
+RUN apk add --no-cache openssl
+
 COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/packages/database/node_modules ./packages/database/node_modules
 COPY --from=builder /app/packages/database/prisma ./prisma
 
 RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nestjs
+    adduser --system --uid 1001 nestjs && \
+    chown -R nestjs:nodejs /app
 
 USER nestjs
 
